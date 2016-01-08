@@ -141,6 +141,8 @@ module Fluent
     # should override buffer_chunk_limit with a larger size.
     config_param :buffer_chunk_limit, :size, :default => 8*1024*1024
     config_param :buffer_queue_limit, :integer, :default => 256
+    config_param :high_watermark, :float, :default => 0.8
+    config_param :stop_source, :string, :default => nil
 
     alias chunk_limit buffer_chunk_limit
     alias chunk_limit= buffer_chunk_limit=
@@ -187,6 +189,14 @@ module Fluent
 
         elsif @queue.size >= @buffer_queue_limit
           raise BufferQueueLimitError, "queue size exceeds limit"
+        end
+
+        if @queue.size > @high_watermark * @buffer_queue_limit
+          $log.warn "buffer queue size #{@queue.size} exceeds high watermark, touch stop source file if not exists."
+          if !@stop_source.nil? && !File.exist?(@stop_source)
+            stop_file = File.new(@stop_source, 'w')
+            stop_file.close
+          end
         end
 
         if data.bytesize > @buffer_chunk_limit

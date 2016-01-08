@@ -188,6 +188,9 @@ module Fluent
     config_param :max_retry_wait, :time, :default => nil
     config_param :num_threads, :integer, :default => 1
     config_param :queued_chunk_flush_interval, :time, :default => 1
+    config_param :buffer_queue_limit, :integer, :default => 256
+    config_param :low_watermark, :float, :default => 0.1
+    config_param :stop_source, :string, :default => nil
 
     def configure(conf)
       super
@@ -294,6 +297,13 @@ module Fluent
       end
       if empty
         return time + @try_flush_interval
+      end
+
+      if @buffer.queue_size < @low_watermark * @buffer_queue_limit
+        if !@stop_source.nil? && File.exist?(@stop_source)
+          File.delete(@stop_source)
+          $log.info "buffer queue size #{@buffer.queue_size} under low watermark, remove stop source file."
+        end
       end
 
       begin
