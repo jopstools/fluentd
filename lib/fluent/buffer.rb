@@ -124,12 +124,14 @@ module Fluent
 
   class BasicBuffer < Buffer
     include MonitorMixin
+    include GetStopSourceOptionMixin
 
     def initialize
       super
       @map = nil # chunks to store data
       @queue = nil # chunks to be flushed
       @parallel_pop = true
+      @stop_source = nil
     end
 
     def enable_parallel(b=true)
@@ -142,7 +144,6 @@ module Fluent
     config_param :buffer_chunk_limit, :size, :default => 8*1024*1024
     config_param :buffer_queue_limit, :integer, :default => 256
     config_param :high_watermark, :float, :default => 0.8
-    config_param :stop_source, :string, :default => nil
 
     alias chunk_limit buffer_chunk_limit
     alias chunk_limit= buffer_chunk_limit=
@@ -151,6 +152,7 @@ module Fluent
 
     def configure(conf)
       super
+      @stop_source = get_stop_source_opts
     end
 
     def start

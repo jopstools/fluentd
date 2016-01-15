@@ -190,4 +190,13 @@ module Fluent
       record[@tag_key] = tag if @include_tag_key
     end
   end
+
+  module GetStopSourceOptionMixin
+    def get_stop_source_opts
+      ObjectSpace.each_object(Fluent::Supervisor) { |obj|
+        opts = obj.options["stop_source"]
+        return opts
+      }
+    end
+  end
 end

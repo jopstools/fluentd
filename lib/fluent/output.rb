@@ -168,6 +168,8 @@ module Fluent
 
 
   class BufferedOutput < Output
+    include GetStopSourceOptionMixin
+
     def initialize
       super
       @next_flush_time = 0
@@ -177,6 +179,7 @@ module Fluent
       @num_errors_lock = Mutex.new
       @secondary_limit = 8
       @emit_count = 0
+      @stop_source = nil
     end
 
     config_param :buffer_type, :string, :default => 'memory'
@@ -190,11 +193,11 @@ module Fluent
     config_param :queued_chunk_flush_interval, :time, :default => 1
     config_param :buffer_queue_limit, :integer, :default => 256
     config_param :low_watermark, :float, :default => 0.1
-    config_param :stop_source, :string, :default => nil
 
     def configure(conf)
       super
 
+      @stop_source = get_stop_source_opts
       @retry_wait = @retry_wait.to_f # converted to Float for calc_retry_wait
       @buffer = Plugin.new_buffer(@buffer_type)
       @buffer.configure(conf)

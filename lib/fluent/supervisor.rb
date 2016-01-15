@@ -170,6 +170,7 @@ module Fluent
         'config_path' => @config_path,
         'pid_file' => @daemonize,
         'plugin_dirs' => @plugin_dirs,
+        'stop_source' => @stop_source,
         'log_path' => @log_path
       }
     end
